@@ -11,7 +11,7 @@ def get_film_data():
     cursor = conn.cursor()
 
     # Query untuk mengambil data film
-    query = "SELECT nama_film, harga, durasi, genre FROM film"
+    query = "SELECT id_film, nama_film, harga, durasi, genre FROM film"
     cursor.execute(query)
     films = cursor.fetchall()  # Menyimpan hasil query ke dalam list
 
@@ -170,7 +170,7 @@ class FilmGallery(QWidget):
             frame = QFrame()
             frame_layout = QVBoxLayout()
 
-            pixmap = QPixmap(f"gambar/{film[0]}.jpg")  # Gambar diambil berdasarkan nama film
+            pixmap = QPixmap(f"gambar/{film[1]}.jpg")  # Gambar diambil berdasarkan nama film
             pixmap = pixmap.scaled(150, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             icon = QIcon(pixmap)
             button = QPushButton()
@@ -178,7 +178,7 @@ class FilmGallery(QWidget):
             button.setIconSize(pixmap.size())
             button.clicked.connect(lambda _, f=film: self.select_film(f))
 
-            judul_label = QLabel(film[0])
+            judul_label = QLabel(film[1])
             judul_label.setAlignment(Qt.AlignCenter)
             judul_label.setStyleSheet("font-weight: bold; font-size: 14px;")
 
@@ -238,7 +238,7 @@ class PemesananTiket(QWidget):
         layout = QVBoxLayout()
 
         # Menampilkan gambar film
-        pixmap = QPixmap(f"gambar/{self.film[0]}.jpg")  # Gambar diambil berdasarkan nama film
+        pixmap = QPixmap(f"gambar/{self.film[1]}.jpg")  # Gambar diambil berdasarkan nama film
         if pixmap.isNull():
             pixmap = QPixmap("gambar/default.jpg")  # Jika gambar tidak ditemukan, tampilkan gambar default
         pixmap = pixmap.scaled(150, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -247,10 +247,10 @@ class PemesananTiket(QWidget):
         gambar_label.setPixmap(icon.pixmap(150, 200))
 
         # Menampilkan informasi film
-        label1 = QLabel(f"Film: {self.film[0]}")
+        label1 = QLabel(f"Film: {self.film[1]}")
         label1.setStyleSheet("font-size: 16px; font-weight: bold;")
-        label2 = QLabel(f"Durasi: {self.film[2]} min")
-        label3 = QLabel(f"Genre: {self.film[3]}")
+        label2 = QLabel(f"Durasi: {self.film[3]} min")
+        label3 = QLabel(f"Genre: {self.film[4]}")
 
         # Menambahkan pilihan hari
         hari_group = QGroupBox("Pilih Hari")
@@ -288,19 +288,15 @@ class PemesananTiket(QWidget):
         # Mengatur kolom dan baris
         for row in range(5):
             for col in range(5):
-                item = QTableWidgetItem(f"({row+1},{col+1})")
+                item = QTableWidgetItem()
+                item.setText("Tersedia")
                 self.table_kursi.setItem(row, col, item)
-                self.table_kursi.setItem(row, col, QTableWidgetItem("Available"))
 
-        # Tombol konfirmasi pesanan
-        tombol_konfirmasi = QPushButton("Konfirmasi Pesanan")
-        tombol_konfirmasi.clicked.connect(self.konfirmasi_pesanan)
+        # Button konfirmasi
+        tombol_pesan = QPushButton("Pesan Tiket")
+        tombol_pesan.clicked.connect(self.pesan_tiket)
 
-        # Tombol lanjut ke pembayaran
-        tombol_lanjut_pembayaran = QPushButton("Lanjut ke Pembayaran")
-        tombol_lanjut_pembayaran.clicked.connect(self.lanjut_ke_pembayaran)
-
-        # Menambahkan komponen ke layout
+        # Layout
         layout.addWidget(gambar_label)
         layout.addWidget(label1)
         layout.addWidget(label2)
@@ -311,28 +307,18 @@ class PemesananTiket(QWidget):
         layout.addWidget(self.jumlah_tiket)
         layout.addWidget(label_kursi)
         layout.addWidget(self.table_kursi)
-        layout.addWidget(tombol_konfirmasi)
-        layout.addWidget(tombol_lanjut_pembayaran)
+        layout.addWidget(tombol_pesan)
 
         self.setLayout(layout)
 
-    def konfirmasi_pesanan(self):
-        # Mengambil inputan pengguna
-        jumlah_tiket = self.jumlah_tiket.text()
-        if not jumlah_tiket.isdigit() or int(jumlah_tiket) <= 0:
-            QMessageBox.warning(self, "Pemesanan Gagal", "Jumlah tiket tidak valid.")
+    def pesan_tiket(self):
+        jumlah = self.jumlah_tiket.text()
+        if not jumlah.isdigit():
+            QMessageBox.warning(self, "Error", "Jumlah tiket harus berupa angka.")
             return
+        QMessageBox.information(self, "Berhasil", "Tiket berhasil dipesan!")
 
-        # Menampilkan konfirmasi pesanan
-        QMessageBox.information(self, "Konfirmasi Pesanan", f"Tiket berhasil dipesan! Jumlah: {jumlah_tiket} tiket.")
-
-    def lanjut_ke_pembayaran(self):
-        # Fungsi untuk melanjutkan ke halaman pembayaran
-        QMessageBox.information(self, "Pembayaran", "Silakan lanjutkan ke halaman pembayaran.")
-        self.close()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = login()
     window.show()
