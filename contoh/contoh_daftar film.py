@@ -8,21 +8,25 @@ import pymysql
 
 # Fungsi untuk menghubungkan ke database
 def get_film_data():
-    # Koneksi ke database
-    conn = pymysql.connect(host='localhost', user='root', password='', database='uas_bioskop')
-    cursor = conn.cursor()
+    try:
+        # Koneksi ke database
+        conn = pymysql.connect(host='localhost', user='root', password='', database='uas_bioskop')
+        cursor = conn.cursor()
 
-    # Query untuk mengambil data film
-    query = "SELECT nama_film, harga, durasi FROM film"
-    cursor.execute(query)
-    films = cursor.fetchall()  # Menyimpan hasil query ke dalam list
+        # Query untuk mengambil data film
+        query = "SELECT nama_film, harga, durasi FROM film"
+        cursor.execute(query)
+        films = cursor.fetchall()  # Menyimpan hasil query ke dalam list
 
-    # Menutup koneksi
-    cursor.close()
-    conn.close()
+        # Menutup koneksi
+        cursor.close()
+        conn.close()
 
-    # Mengembalikan data film
-    return films
+        # Mengembalikan data film
+        return films
+    except pymysql.MySQLError as e:
+        print(f"Database error: {e}")
+        return []
 
 
 class DetailFilm(QDialog):
@@ -79,13 +83,19 @@ class FilmGallery(QWidget):
             frame_layout = QVBoxLayout()
 
             # Menambahkan tombol dan gambar film (gambar akan disesuaikan dengan path yang benar)
-            pixmap = QPixmap(f"gambar/{film[0]}.jpg")  # Gambar diambil berdasarkan nama film
+            pixmap_path = f"gambar/{film[0]}.jpg"
+            pixmap = QPixmap(pixmap_path)
+
+            if pixmap.isNull():  # Jika gambar tidak ditemukan
+                pixmap = QPixmap(150, 200)  # Placeholder ukuran gambar
+                pixmap.fill(Qt.lightGray)
+
             pixmap = pixmap.scaled(150, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             icon = QIcon(pixmap)  # Konversi QPixmap ke QIcon
             button = QPushButton()
             button.setIcon(icon)
             button.setIconSize(pixmap.size())
-            button.clicked.connect(lambda _, f=film: self.select_film(f))
+            button.clicked.connect(self.create_film_callback(film))
 
             # Judul film
             judul_label = QLabel(film[0])  # Nama film
@@ -118,6 +128,11 @@ class FilmGallery(QWidget):
         main_layout.addLayout(footer_layout)
         self.setLayout(main_layout)
 
+    def create_film_callback(self, film):
+        def callback():
+            self.select_film(film)
+        return callback
+
     def select_film(self, film):
         # Menyimpan film yang dipilih
         self.selected_film = film
@@ -127,8 +142,8 @@ class FilmGallery(QWidget):
         # Menampilkan dialog atau aksi konfirmasi
         if self.selected_film:
             detail_form = DetailFilm(
-                f"Film dipilih: {self.selected_film[0]}",  # Nama film
-                f"Durasi: {self.selected_film[2]}"  # Durasi film
+                self.selected_film[0],  # Nama film
+                f"Durasi: {self.selected_film[2]} menit"  # Durasi film
             )
             detail_form.exec_()
         else:
@@ -144,4 +159,8 @@ class FilmGallery(QWidget):
             no_selection_dialog.exec_()
 
 
-
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    gallery = FilmGallery()
+    gallery.show()
+    sys.exit(app.exec_())

@@ -1,10 +1,10 @@
 import sys
 import pymysql
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QRadioButton, QHBoxLayout, QGridLayout, QFrame, QDialog, QGroupBox, QTableWidget, QTableWidgetItem, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QRadioButton, QHBoxLayout, QGridLayout, QFrame, QDialog, QGroupBox, QTableWidget, QTableWidgetItem, QMessageBox,QFormLayout
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt
+from io import BytesIO
 import qrcode
-import random
 
 
 # Fungsi untuk menghubungkan ke database dan mengambil data film
@@ -346,7 +346,7 @@ class Pembayaran(QWidget):
         metode_group.setLayout(metode_layout)
 
         tombol_bayar = QPushButton("Selesaikan Pembayaran Anda")
-        tombol_bayar.clicked.connect(self.selesaikan_pembayaran)
+        tombol_bayar.clicked.connect(self.buat_tiket)
 
         layout.addWidget(label1)
         layout.addWidget(label2)
@@ -358,16 +358,77 @@ class Pembayaran(QWidget):
 
         self.setLayout(layout)
 
-    def selesaikan_pembayaran(self):
-        ticket_id = random.randint(1000, 9999)  # ID tiket acak
-        qr_data = f"Film: {self.film[1]}\nJumlah Tiket: {self.jumlah_tiket}\nID Tiket: {ticket_id}"
-        self.generate_eticket(qr_data)
+    def buat_tiket(self):
+        self.membuat_tiket = e_tiket()
+        self.membuat_tiket.show()
+        self.close()
 
-    def generate_eticket(self, qr_data):
-        qr = qrcode.make(qr_data)
-        qr.save("eticket.png")
-        qr.show()
-        QMessageBox.information(self, "Pembayaran Sukses", "Pembayaran berhasil! E-tiket telah dibuat.")
+class e_tiket(QWidget):
+    def __init__(self, nama_film, nama_pelanggan, waktu_menonton, harga, qr_data):
+        super().__init__()
+        self.setWindowTitle("E-Tiket")
+        self.nama_film = nama_film
+        self.nama_pelanggan = nama_pelanggan
+        self.waktu_menonton = waktu_menonton
+        self.harga = harga
+        self.qr_data = qr_data
+        self.tiket_ui()
+
+    def tiket_ui(self):
+        layout = QVBoxLayout()
+
+        # Judul Aplikasi
+        label_judul = QLabel("BIOSKOP NUSANTARA")
+        label_judul.setAlignment(Qt.AlignCenter)
+        label_judul.setStyleSheet("font-size: 20px; font-weight: bold;")
+
+        # Detail Tiket
+        form_layout = QFormLayout()
+        form_layout.addRow("Nama Film:", QLabel(self.nama_film))
+        form_layout.addRow("Nama:", QLabel(self.nama_pelanggan))
+        form_layout.addRow("Waktu Menonton:", QLabel(self.waktu_menonton))
+        form_layout.addRow("Harga:", QLabel(f"Rp {self.harga:,}"))
+
+        # QR Code
+        qr_code_label = QLabel()
+        qr_code_label.setAlignment(Qt.AlignCenter)
+        qr_pixmap = self.generate_qr_code(self.qr_data)
+        qr_code_label.setPixmap(qr_pixmap)
+
+        # Tombol Tutup
+        tombol_tutup = QPushButton("Tutup")
+        tombol_tutup.clicked.connect(self.close)
+
+        # Menambahkan ke layout utama
+        layout.addWidget(label_judul)
+        layout.addLayout(form_layout)
+        layout.addWidget(qr_code_label)
+        layout.addWidget(tombol_tutup, alignment=Qt.AlignCenter)
+
+        self.setLayout(layout)
+        self.resize(400, 600)
+
+    def generate_qr_code(self, data):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill="black", back_color="white")
+
+        # Convert QR Code to QPixmap
+        byte_array = BytesIO()
+        img.save(byte_array, format="PNG")
+        byte_array.seek(0)
+        pixmap = QPixmap()
+        pixmap.loadFromData(byte_array.read())
+
+        return pixmap
+
 
 
 if __name__ == "__main__":
