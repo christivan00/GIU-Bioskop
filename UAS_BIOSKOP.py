@@ -16,8 +16,6 @@ class login(QWidget):
     def login_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(20, 50, 20, 200)
-
-        # Set Ubuntu font globally
         self.setStyleSheet("font-family: 'Ubuntu';")
 
         # QLineEdit untuk nama
@@ -56,8 +54,6 @@ class login(QWidget):
             }
         """)
         self.tombol_login.clicked.connect(self.next_login)
-
-        # Tombol daftar
         self.tombol_daftar = QPushButton("Daftar")
         self.tombol_daftar.setStyleSheet("""
             QPushButton {
@@ -72,8 +68,6 @@ class login(QWidget):
             }
         """)
         self.tombol_daftar.clicked.connect(self.next_daftar)
-
-        # Susunan layout
         label1 = QLabel("BIOSKOP NUSANTARA\n\n")
         label1.setAlignment(Qt.AlignCenter)
         label1.setStyleSheet("""color: #2a3132; font-size: 18px; font-weight: bold; font-family: 'Ubuntu';""")
@@ -152,10 +146,8 @@ class login(QWidget):
             result = cursor.fetchone()
 
             if result:
-                # Mendapatkan nama pengguna setelah login berhasil
-                nama_user = result[1]  # Indeks 1 sesuai dengan posisi nama pada tabel customer
+                nama_user = result[1] 
                 QMessageBox.information(self, "Berhasil", "Login berhasil!")
-                # Pindah ke halaman daftar film dan kirimkan nama pengguna
                 self.daftar_film = daftar_film(nama_user)
                 self.daftar_film.show()
                 self.close()
@@ -171,7 +163,7 @@ class login(QWidget):
 class daftar_film(QWidget):
     def __init__(self, nama_user):
         super().__init__()
-        self.nama_user = nama_user  # Menyimpan nama pengguna
+        self.nama_user = nama_user  
         self.film_ui()
 
     def koneksi_database(self):
@@ -184,25 +176,22 @@ class daftar_film(QWidget):
 
     def film_ui(self):
         layout = QVBoxLayout()
-        layout.setContentsMargins(20, 50, 20, 200)
+        layout.setContentsMargins(20, 50, 20, 100)
+        self.setStyleSheet("font-family: 'Ubuntu';")
 
-        # Label akun di bagian atas
         label_akun = QLabel(f"Akun: {self.nama_user}")
         label_akun.setAlignment(Qt.AlignLeft)
         label_akun.setStyleSheet("font-size: 14px; font-weight: bold; color: #2a3132; margin: 10px;")
         layout.addWidget(label_akun)
 
-        # Label judul
         label1 = QLabel("Daftar Film")
         label1.setAlignment(Qt.AlignCenter)
         label1.setStyleSheet("font-size: 18px; font-weight: bold; color: #2a3132;")
         layout.addWidget(label1)
 
-        # Grid Layout untuk menampilkan film dalam kotak
         self.gridLayout = QGridLayout()
         layout.addLayout(self.gridLayout)
 
-        # Ambil data film dari database
         self.get_film_data()
 
         self.setLayout(layout)
@@ -221,19 +210,15 @@ class daftar_film(QWidget):
             for film in films:
                 id_film, nama_film, harga, durasi, genre, gambar_path = film
                 
-                # Pastikan gambar_path benar-benar valid
-                gambar_path = gambar_path.replace('/', '\\')  # Mengganti semua '/' dengan '\\' untuk path Windows
-
-                # Membuat QPixmap untuk menampilkan gambar
+                gambar_path = gambar_path.replace('/', '\\')  
                 pixmap = QPixmap(gambar_path)
                 pixmap = pixmap.scaled(120, 200, Qt.KeepAspectRatio)
                 
-                # Membuat label untuk gambar film
                 image_label = QLabel(self)
                 image_label.setPixmap(pixmap)
                 image_label.setAlignment(Qt.AlignCenter)
                 image_label.setStyleSheet("border: 1px solid #ccc; border-radius: 8px; padding: 5px; margin: 10px;")
-                image_label.mousePressEvent = lambda event, id_film=id_film: self.open_pemesanan(id_film)  # Fungsi click
+                image_label.mousePressEvent = lambda event, id_film=id_film: self.open_pemesanan(id_film) 
 
                 name_label = QLabel(nama_film)
                 name_label.setAlignment(Qt.AlignCenter)
@@ -243,14 +228,12 @@ class daftar_film(QWidget):
                 price_label.setAlignment(Qt.AlignCenter)
                 price_label.setStyleSheet("font-size: 12px; color: #4CAF50; margin-bottom: 10px;")
 
-                # Menambahkan label gambar ke grid
                 self.gridLayout.addWidget(name_label, row, col)
                 self.gridLayout.addWidget(image_label, row + 1, col)
                 self.gridLayout.addWidget(price_label, row + 2, col)
 
-                # Menambah kolom, jika lebih dari 1 film, pindah ke baris berikutnya
                 col += 1
-                if col > 1:  # Menampilkan 2 film per baris
+                if col > 1: 
                     col = 0
                     row += 3
 
@@ -265,8 +248,6 @@ class daftar_film(QWidget):
         self.pemesanan = pemesanan(id_film)
         self.pemesanan.show()
         self.close()
-
-
 
 class pemesanan(QWidget):
     def __init__(self, id_film):
@@ -283,14 +264,12 @@ class pemesanan(QWidget):
         )
 
     def pemesanan_ui(self):
-        # Buat layout terlebih dahulu
         self.layout_pemesanan = QVBoxLayout()
         self.layout_pemesanan.setContentsMargins(20, 10, 20, 200)
+        self.setStyleSheet("font-family: 'Ubuntu';")
 
-        # Ambil data film berdasarkan id
         self.get_film_detail()
 
-        # Set layout setelah mendapatkan detail film
         self.setLayout(self.layout_pemesanan)
         self.setWindowTitle("Pemesanan Film")
         self.resize(400, 600)
@@ -306,7 +285,6 @@ class pemesanan(QWidget):
             if film:
                 nama_film, harga, durasi, genre = film
 
-                # Menampilkan detail film
                 label1 = QLabel((f"{nama_film}"))
                 label1.setAlignment(Qt.AlignCenter)
                 label1.setStyleSheet("""color: #2a3132; font-size: 18px; font-weight: bold; font-family: ubuntu;""")
@@ -314,13 +292,15 @@ class pemesanan(QWidget):
                 self.layout_pemesanan.addWidget(QLabel(f"Durasi: {durasi}"))
                 self.layout_pemesanan.addWidget(QLabel(f"Genre: {genre}"))
                 self.layout_pemesanan.addWidget(QLabel(f"Harga: {harga}"))
+                
+                labebatas = QLabel(f"_"*50)
+                labebatas.setAlignment(Qt.AlignCenter)
+                self.layout_pemesanan.addWidget(labebatas)
 
-                # Menambahkan radio button untuk pilihan hari tayang
                 self.layout_pemesanan.addWidget(QLabel("Pilih Hari Tayang:"))
                 self.hari_group = QButtonGroup()
                 hari_options = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
                 
-                # Horizontal Layout untuk radio button hari
                 hari_layout = QHBoxLayout()
                 for day in hari_options:
                     radio_button = QRadioButton(day)
@@ -328,12 +308,10 @@ class pemesanan(QWidget):
                     hari_layout.addWidget(radio_button)
                 self.layout_pemesanan.addLayout(hari_layout)
 
-                # Menambahkan radio button untuk jam tayang
                 self.layout_pemesanan.addWidget(QLabel("Pilih Jam Tayang:"))
                 self.jam_group = QButtonGroup()
                 jam_options = ["10:00", "13:00", "16:00", "19:00"]
                 
-                # Horizontal Layout untuk radio button jam
                 jam_layout = QHBoxLayout()
                 for jam in jam_options:
                     radio_button = QRadioButton(jam)
@@ -341,18 +319,15 @@ class pemesanan(QWidget):
                     jam_layout.addWidget(radio_button)
                 self.layout_pemesanan.addLayout(jam_layout)
 
-                # Input nomor kursi
                 self.layout_pemesanan.addWidget(QLabel("Masukkan Nomor Kursi:"))
                 self.kursi_input = QLineEdit(self)
                 self.layout_pemesanan.addWidget(self.kursi_input)
 
-                # Pilihan metode pembayaran
                 self.layout_pemesanan.addWidget(QLabel("Pilih Metode Pembayaran:"))
                 self.metode_combo = QComboBox(self)
                 self.metode_combo.addItems(["Cash", "Debit", "Credit", "E-wallet"])
                 self.layout_pemesanan.addWidget(self.metode_combo)
 
-                # Tombol Pemesanan
                 self.pesan_button = QPushButton("Pesan", self)
                 self.pesan_button.clicked.connect(self.pesan_film)
                 self.layout_pemesanan.addWidget(self.pesan_button)
@@ -404,19 +379,16 @@ class tiket(QWidget):
         layout.setSpacing(5)
         self.resize(400, 600)
 
-        # Ambil detail film dari database
         film_detail = self.get_film_detail()
 
         if film_detail:
             nama_film, harga, durasi, genre = film_detail
 
-            # Header
             label_header = QLabel("Tiket Pemesanan")
             label_header.setAlignment(Qt.AlignCenter)
             label_header.setStyleSheet("font-size: 22px; font-weight: bold; color: #4CAF50;")
             layout.addWidget(label_header)
 
-            # Detail Tiket
             detail_labels = [
                 f"Nama Film: {nama_film}",
                 f"Durasi: {durasi}",
@@ -431,7 +403,6 @@ class tiket(QWidget):
                 label.setStyleSheet("font-size: 14px; color: #333333; margin: 5px 0;")
                 layout.addWidget(label)
 
-            # Buat QR Code
             qr_code_label = QLabel(self)
             qr_code_label.setAlignment(Qt.AlignCenter)
             qr_pixmap = self.generate_qr_code(
@@ -440,7 +411,6 @@ class tiket(QWidget):
             qr_code_label.setPixmap(qr_pixmap)
             layout.addWidget(qr_code_label)
 
-            # Tombol tutup
             button_layout = QHBoxLayout()
             back_button = QPushButton("Tutup")
             back_button.setStyleSheet("""
@@ -501,7 +471,6 @@ class tiket(QWidget):
         self.close()
 
         
-# Main program
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = login()
