@@ -18,23 +18,28 @@ class login(QWidget):
         layout.setContentsMargins(20, 50, 20, 200)
         self.setStyleSheet("font-family: 'Ubuntu';")
 
+        # QLineEdit untuk nama
         self.nama_login = QLineEdit(self)
         self.nama_login.setPlaceholderText("Masukkan nama")
         self.nama_login.setStyleSheet("font-size: 14px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;")
 
+        # QLineEdit untuk no hp
         self.hp_login = QLineEdit(self)
         self.hp_login.setPlaceholderText("Masukkan no hp")
         self.hp_login.setStyleSheet("font-size: 14px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;")
 
+        # QLineEdit untuk email
         self.email_login = QLineEdit(self)
         self.email_login.setPlaceholderText("Masukkan email")
         self.email_login.setStyleSheet("font-size: 14px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;")
 
+        # QLineEdit untuk password
         self.password = QLineEdit(self)
         self.password.setPlaceholderText("Masukkan Password")
         self.password.setEchoMode(QLineEdit.Password)
         self.password.setStyleSheet("font-size: 14px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;")
 
+        # Tombol login
         self.tombol_login = QPushButton("Login")
         self.tombol_login.setStyleSheet("""
             QPushButton {
@@ -126,30 +131,28 @@ class login(QWidget):
                 connection.close()
 
     def next_login(self):
-        nama = self.nama_login.text().strip()
-        no_hp = self.hp_login.text().strip()
         email = self.email_login.text().strip()
         password = self.password.text().strip()
 
-        if not nama or not no_hp or not email or not password:
+        if not email or not password:
             QMessageBox.warning(self, "Login Gagal", "Silakan isi email dan password.")
             return
 
         try:
             connection = self.koneksi_database()
             cursor = connection.cursor()
-            query = "SELECT * FROM customer WHERE nama = %s AND no_hp = %s AND email = %s AND password = %s"
-            cursor.execute(query, (nama , no_hp,email, password))
+            query = "SELECT * FROM customer WHERE email = %s AND password = %s"
+            cursor.execute(query, (email, password))
             result = cursor.fetchone()
 
             if result:
-                id_cs, nama_user, email_user, hp_user, password_user = result
+                nama_user = result[1] 
                 QMessageBox.information(self, "Berhasil", "Login berhasil!")
-                self.daftar_film = daftar_film(nama_user, hp_user, email_user, password_user)
+                self.daftar_film = daftar_film(nama_user)
                 self.daftar_film.show()
                 self.close()
             else:
-                QMessageBox.warning(self, "Login Gagal", "data yang di masukkan salah.")
+                QMessageBox.warning(self, "Login Gagal", "Email atau password salah.")
         except mysql.connector.Error as e:
             QMessageBox.critical(self, "Error", f"Gagal login: {e}")
         finally:
@@ -157,15 +160,10 @@ class login(QWidget):
                 cursor.close()
                 connection.close()
 
-
-
 class daftar_film(QWidget):
-    def __init__(self, nama_user, hp_user, email_user, password_user):
+    def __init__(self, nama_user):
         super().__init__()
-        self.nama_user = nama_user
-        self.hp_user = hp_user
-        self.email_user = email_user
-        self.password_user = password_user
+        self.nama_user = nama_user  
         self.film_ui()
 
     def koneksi_database(self):
@@ -181,28 +179,10 @@ class daftar_film(QWidget):
         layout.setContentsMargins(20, 50, 20, 100)
         self.setStyleSheet("font-family: 'Ubuntu';")
 
-        label_akun = QLabel(f"User: {self.nama_user}")
+        label_akun = QLabel(f"Akun: {self.nama_user}")
         label_akun.setAlignment(Qt.AlignLeft)
-        label_akun.setStyleSheet("font-size: 14px; color: #555; margin-bottom: 10px;")
+        label_akun.setStyleSheet("font-size: 14px; font-weight: bold; color: #2a3132; margin: 10px;")
         layout.addWidget(label_akun)
-
-        tombol_Akun = QPushButton("Akun")
-        tombol_Akun.setStyleSheet("""
-        QPushButton {
-            font-size: 14px;
-            padding: 8px;
-            background-color: #FFC107;
-            color: black;
-            border-radius: 5px;
-        }
-        QPushButton:hover {
-            background-color: #FFB300;
-        }
-        """)
-
-        tombol_Akun.clicked.connect(self.info_akun)
-        layout.addWidget(tombol_Akun)
-
 
         label1 = QLabel("Daftar Film")
         label1.setAlignment(Qt.AlignCenter)
@@ -229,6 +209,7 @@ class daftar_film(QWidget):
             row, col = 0, 0
             for film in films:
                 id_film, nama_film, harga, durasi, genre, gambar_path = film
+                
                 gambar_path = gambar_path.replace('/', '\\')  
                 pixmap = QPixmap(gambar_path)
                 pixmap = pixmap.scaled(120, 200, Qt.KeepAspectRatio)
@@ -263,276 +244,10 @@ class daftar_film(QWidget):
                 cursor.close()
                 connection.close()
 
-    def info_akun(self):
-        self.akun = informasi_akun(self.nama_user, self.hp_user, self.email_user, self.password_user)
-        self.akun.show()
-        self.close()
-    
-
-
     def open_pemesanan(self, id_film):
         self.pemesanan = pemesanan(id_film)
         self.pemesanan.show()
         self.close()
-
-        
-class informasi_akun(QWidget):
-    def __init__(self, nama_user, hp_user, email_user, password_user):
-        super().__init__()
-        self.nama_user = nama_user
-        self.hp_user = hp_user
-        self.email_user = email_user
-        self.password_user = password_user
-        self.akun_ui()
-
-    
-    def akun_ui(self):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 50, 20, 200)
-        self.setWindowTitle('Info Akun')
-        self.setStyleSheet("font-family: 'Ubuntu'; background-color: #f0f0f0;")
-
-        label1 = QLabel("DETAIL AKUN\n\n")
-        label1.setAlignment(Qt.AlignCenter)
-        label1.setStyleSheet("color: #2a3132; font-size: 18px; font-weight: bold;")
-        layout.addWidget(label1)
-        
-        self.tombol_kembali = QPushButton("kembali")
-        self.tombol_kembali.setStyleSheet("""
-            QPushButton {
-                font-size: 14px;
-                padding: 8px;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
-        self.tombol_kembali.clicked.connect(self.kembali_ke_daftar_film)  
-        layout.addWidget(self.tombol_kembali)
-        
-        self.tombol_edit = QPushButton("edit akun")
-        self.tombol_edit.setStyleSheet("""
-            QPushButton {
-                font-size: 14px;
-                padding: 8px;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
-        self.tombol_edit.clicked.connect(self.edit_akun)  
-        self.tombol_logout = QPushButton("logout")
-        self.tombol_logout.setStyleSheet("""
-            QPushButton {
-                font-size: 14px;
-                padding: 8px;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
-        self.tombol_logout.clicked.connect(self.logout)
-
-        self.tombol_hapus_akun = QPushButton("hapus akun")
-        self.tombol_hapus_akun.setStyleSheet("""
-            QPushButton {
-                font-size: 14px;
-                padding: 8px;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;`
-            }
-        """)
-        self.tombol_hapus_akun.clicked.connect(self.hapus_akun)  
-
-        layout.addWidget(QLabel(f"Nama: {self.nama_user}"))
-        layout.addWidget(QLabel(f"No HP: {self.hp_user}"))
-        layout.addWidget(QLabel(f"Email: {self.email_user}"))
-        layout.addWidget(QLabel(f"Password: {self.password_user}"))
-        layout.addWidget(self.tombol_edit)
-        layout.addWidget(self.tombol_logout)
-        layout.addWidget(self.tombol_hapus_akun)
-        self.setLayout(layout)
-        self.resize(400, 600)
-
-            
-    def koneksi_database(self):
-        try:
-            conn = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                password='',
-                database='uas_bioskop'
-            )
-            return conn
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            return None
-    def kembali_ke_daftar_film(self):
-        self.daftar_film = daftar_film(self.nama_user, self.hp_user, self.email_user, self.password_user)
-        self.daftar_film.show()
-        self.close()
-        
-    def edit_akun(self):
-        self.edit_form = EditAkun(self.nama_user, self.hp_user, self.email_user, self.password_user)
-        self.edit_form.show()
-        self.close()
-        
-    def logout(self):
-        QMessageBox.information(self, "Logout", "Anda telah logout.")
-        self.login = login()
-        self.login.show()
-        self.close()
-
-    def hapus_akun(self):
-        reply = QMessageBox.question(self, 'Hapus Akun', 
-                                    "Apakah Anda yakin ingin menghapus akun ini? Semua data akan hilang.",
-                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            self.proses_hapus_akun()
-
-    def proses_hapus_akun(self):
-        try:
-            connection = self.koneksi_database()
-            cursor = connection.cursor()
-            query = "DELETE FROM customer WHERE email = %s"
-            cursor.execute(query, (self.email_user,))
-            connection.commit()
-
-            QMessageBox.information(self, "Akun Dihapus", "Akun Anda telah berhasil dihapus.")
-            
-            self.login = login() 
-            self.login.show()
-            self.close()
-        except mysql.connector.Error as e:
-            QMessageBox.critical(self, "Error", f"Gagal menghapus akun: {e}")
-        finally:
-            if 'connection' in locals() and connection.is_connected():
-                cursor.close()
-                connection.close()
-
-        
-class EditAkun(QWidget):
-    def __init__(self, nama_user, hp_user, email_user, password_user):
-        super().__init__()
-        self.nama_user = nama_user
-        self.hp_user = hp_user
-        self.email_user = email_user
-        self.password_user = password_user
-        self.edit_akun_ui()
-
-    def edit_akun_ui(self):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 50, 20, 100)
-        self.setWindowTitle('Edit Akun')
-        self.setStyleSheet("font-family: 'Ubuntu'; background-color: #f0f0f0;")
-
-        label1 = QLabel("EDIT AKUN\n\n")
-        label1.setAlignment(Qt.AlignCenter)
-        label1.setStyleSheet("color: #2a3132; font-size: 18px; font-weight: bold;")
-        layout.addWidget(label1)
-
-        # Input untuk Nama
-        self.nama_edit = QLineEdit(self)
-        self.nama_edit.setText(self.nama_user)
-        self.nama_edit.setPlaceholderText("Nama")
-        layout.addWidget(QLabel("nama"))
-        layout.addWidget(self.nama_edit)
-
-        # Input untuk No HP
-        self.hp_edit = QLineEdit(self)
-        self.hp_edit.setText(self.hp_user)
-        self.hp_edit.setPlaceholderText("No HP")
-        layout.addWidget(QLabel("No HP"))
-        layout.addWidget(self.hp_edit)
-
-        # Input untuk Email
-        self.email_edit = QLineEdit(self)
-        self.email_edit.setText(self.email_user)
-        self.email_edit.setPlaceholderText("Email")
-        layout.addWidget(QLabel("Email"))
-        layout.addWidget(self.email_edit)
-
-        # Input untuk Password
-        self.password_edit = QLineEdit(self)
-        self.password_edit.setText(self.password_user)
-        self.password_edit.setPlaceholderText("Password")
-        self.password_edit.setEchoMode(QLineEdit.Password)
-        layout.addWidget(QLabel("Password"))
-        layout.addWidget(self.password_edit)
-
-        tombol_simpan = QPushButton("Simpan Perubahan")
-        tombol_simpan.setStyleSheet("""
-            QPushButton {
-                font-size: 14px;
-                padding: 8px;
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
-        tombol_simpan.clicked.connect(self.simpan_perubahan) 
-        layout.addWidget(tombol_simpan)
-
-        self.setLayout(layout)
-        self.resize(400, 600)
-
-    def simpan_perubahan(self):
-        # Mengambil data yang telah diedit
-        nama_baru = self.nama_edit.text().strip()
-        hp_baru = self.hp_edit.text().strip()
-        email_baru = self.email_edit.text().strip()
-        password_baru = self.password_edit.text().strip()
-
-        # Validasi input
-        if not nama_baru or not hp_baru or not email_baru or not password_baru:
-            QMessageBox.warning(self, "Edit Gagal", "Silakan isi semua data.")
-            return
-
-        try:
-            connection = self.koneksi_database()
-            cursor = connection.cursor()
-            query = "UPDATE customer SET nama = %s, no_hp = %s, email = %s, password = %s WHERE email = %s"
-            cursor.execute(query, (nama_baru, hp_baru, email_baru, password_baru, self.email_user))
-            connection.commit()
-
-            QMessageBox.information(self, "Berhasil", "Akun berhasil diperbarui.")
-            
-            # Setelah menyimpan perubahan, kembali ke halaman info akun
-            self.info_akun = informasi_akun(nama_baru, hp_baru, email_baru, password_baru)
-            self.info_akun.show()
-            self.close()
-        except mysql.connector.Error as e:
-            QMessageBox.critical(self, "Error", f"Gagal memperbarui akun: {e}")
-        finally:
-            if 'connection' in locals() and connection.is_connected():
-                cursor.close()
-                connection.close()
-
-    def koneksi_database(self):
-        return mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='',
-            database='uas_bioskop'
-        )
-
-            
 
 class pemesanan(QWidget):
     def __init__(self, id_film):
@@ -639,6 +354,7 @@ class pemesanan(QWidget):
         self.tiket_open.show()
         self.close()
 
+
 class tiket(QWidget):
     def __init__(self, id_film, hari_tayang, jam_tayang, kursi, metode_pembayaran):
         super().__init__()
@@ -668,7 +384,7 @@ class tiket(QWidget):
         if film_detail:
             nama_film, harga, durasi, genre = film_detail
 
-            label_header = QLabel("TIKET NUSANTARA")
+            label_header = QLabel("Tiket Pemesanan")
             label_header.setAlignment(Qt.AlignCenter)
             label_header.setStyleSheet("font-size: 22px; font-weight: bold; color: #4CAF50;")
             layout.addWidget(label_header)
@@ -753,8 +469,6 @@ class tiket(QWidget):
 
     def go_back(self):
         self.close()
-
-
 
         
 if __name__ == "__main__":
