@@ -738,7 +738,7 @@ class tiket(QWidget):
 
     def generate_qr_code(self, nama_film, hari_tayang, jam_tayang, kursi):
         data = f"Film: {nama_film}\nHari: {hari_tayang}\nJam: {jam_tayang}\nKursi: {kursi}"
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr = qrcode.QRCode(version=1, box_size=6, border=5)
         qr.add_data(data)
         qr.make(fit=True)
 
